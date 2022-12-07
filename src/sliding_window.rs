@@ -44,18 +44,8 @@ impl<Item> SlidingWindow<Item> {
 
     ///Iterates over the items of the window by order of insertions ascending.
     #[allow(dead_code)]
-    pub fn iter<'a>(&'a self) -> OrderedIter<'a, Item> {
-        let mut sli = OrderedIter {
-            sw: self,
-            end: self.vec.len() - 1,
-            next: 0,
-            stop: false,
-        };
-        if self.vec.len() == self.capacity() {
-            sli.next = self.insert_index;
-            sli.end = (self.insert_index - 1) % self.capacity();
-        }
-        sli
+    pub fn iter<'a>(&'a self) -> Iter<'a, Item> {
+        Iter { sw: self, index: 0 }
     }
 
     pub fn items(&self) -> &Vec<Item> {
@@ -63,26 +53,21 @@ impl<Item> SlidingWindow<Item> {
     }
 }
 
-pub struct OrderedIter<'a, Item> {
+pub struct Iter<'a, Item> {
     sw: &'a SlidingWindow<Item>,
-    end: usize,
-    next: usize,
-    stop: bool,
+    index: usize,
 }
 
-impl<'a, Item> Iterator for OrderedIter<'a, Item> {
+impl<'a, Item> Iterator for Iter<'a, Item> {
     type Item = &'a Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.stop {
-            return None;
+        let index = self.index + 1;
+        let option = self.sw.get(index);
+        if let Some(_) = option {
+            self.index = index;
         }
-        if self.next == self.end {
-            self.stop = true;
-        }
-        let value = &self.sw.vec[self.next];
-        self.next = (self.next + 1) % self.sw.capacity();
-        return Some(value);
+        option
     }
 }
 
